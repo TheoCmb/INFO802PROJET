@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <title>TP INFO802 : Calcul de trajet</title>
+  <link rel="stylesheet" href="style.css">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+  <!-- OpenSstreetMap -->
+  <script src="https://cdn.rawgit.com/openlayers/openlayers.github.io/master/en/v6.15.1/build/ol.js"></script>
+  <!-- Leaflet -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css" />
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.js"></script>
+</head>
+<body>
+    <script></script>
+
+    <nav class="navbar navbar-expand-lg bg-body-tertiary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="https://www.univ-smb.fr/">
+                <img src="https://www.univ-smb.fr/wp-content/themes/usmb/assets/img/logo.svg" alt="Logo" width="200" height="60" class="d-inline-block align-text-top">
+            </a>        
+        </div>
+      </nav>
+
+      <script>
+
+        function getListeVilles(id){
+          fetch("https://geo.api.gouv.fr/communes")
+              .then(response => response.json())
+              .then(data => {
+                  // Extraire les noms du JSON
+
+                  const filtre = data.filter(commune => commune.population > 1500);
+                  const noms = filtre.map(commune => commune.nom).sort();
+                  console.log(noms);
+
+                  // Sélectionner l'élément <select>
+                  const selectElement = document.getElementById(id);
+
+                  // Ajouter une option vide par défaut
+                  const defaultOption = document.createElement("option");
+                  defaultOption.text = "";
+                  selectElement.add(defaultOption);
+
+                  // Ajouter chaque nom en tant qu'option dans le sélecteur
+                  noms.forEach(nom => {
+                      const option = document.createElement("option");
+                      option.value = nom;
+                      option.text = nom;
+                      selectElement.add(option);
+                      
+                  });
+              })
+              .catch(error => {
+                  console.error('Erreur lors de la requête :', error);
+              });
+          }
+          getListeVilles("floatingSelectVille1");
+          getListeVilles("floatingSelectVille2");
+      </script>
+
+    <div class="d-flex justify-content-around mt-2">
+        <div class="mt-2">
+            <!-- <div class="form-floating mb-3">
+                <input type="text" class="form-control" id="floatingInput" placeholder="Départ">
+                <label for="floatingInput">Départ</label>
+            </div>
+            <div class="form-floating mb-3">
+                <input type="text" class="form-control" id="floatingInput" placeholder="Arrivée">
+                <label for="floatingInput">Arrivée</label>
+            </div>                -->
+            <div class="form-floating mb-3">
+              <select class="form-select" id="floatingSelectVille1" aria-label="Floating label select example">
+              </select>
+              <label for="floatingSelectVille1">Départ</label>
+            </div>
+            <div class="form-floating mb-3">
+              <select class="form-select" id="floatingSelectVille2" aria-label="Floating label select example">
+              </select>
+              <label for="floatingSelectVille2">Arrivée</label>
+            </div>
+            
+            <script>
+              // Récupérer les éléments select
+              var selectVille1 = document.getElementById("floatingSelectVille1");
+              var selectVille2 = document.getElementById("floatingSelectVille2");
+            
+              // Fonction pour récupérer la valeur sélectionnée
+              function getSelectedValue(selectElement) {
+                return selectElement.value;
+              }
+
+              // Variable pour stocker l'itinéraire actuel
+              var itineraireActuel = null;
+
+              // Fonction pour définir les points de départ et d'arrivée et calculer l'itinéraire
+              function setItineraire(map, latitudeDepart, longitudeDepart, latitudeArrivee, longitudeArrivee) {
+                  itineraireActuel = L.Routing.control({
+                      waypoints: [
+                          L.latLng(latitudeDepart, longitudeDepart),  // Coordonnées de départ
+                          L.latLng(latitudeArrivee, longitudeArrivee) // Coordonnées d'arrivée
+                      ],
+                      routeWhileDragging: true,
+                      addWaypoints: false
+                  }).addTo(map);
+              }
+                        
+              async function updateSelectedValues() {
+                var valeurDepart = getSelectedValue(selectVille1);
+                var valeurArrivee = getSelectedValue(selectVille2);
+
+                console.log("Valeur de départ:", valeurDepart);
+                console.log("Valeur d'arrivée:", valeurArrivee);
+
+                var ville1 = "https://api-adresse.data.gouv.fr/search/?q=" + valeurDepart + "&type=municipality&limit=1";
+                var ville2 = "https://api-adresse.data.gouv.fr/search/?q=" + valeurArrivee + "&type=municipality&limit=1";
+                console.log("TESTTTTT : ", ville1);
+                console.log("TESTTTTT : ", ville2);
+
+                var longVille1 = await getCoord(ville1, 0);
+                var latVille1 = await getCoord(ville1, 1);
+                var longVille2 = await getCoord(ville2, 0);
+                var latVille2 = await getCoord(ville2, 1);
+
+                if (itineraireActuel) {
+                    map.removeControl(itineraireActuel);
+                }
+
+                setItineraire(map, latVille1, longVille1, latVille2, longVille2);
+            }
+
+              function isFloat(value) {
+                if (typeof value !== 'number') {
+                    return false;
+                }
+                if (!Number.isFinite(value)) {
+                    return false;
+                }
+                if (value % 1 === 0) {
+                    return false;
+                }
+                return true;
+            }
+
+              async function getCoord(url, longlat) {
+                try {
+                    const response = await fetch(url);
+                    const data = await response.json();
+                    
+                    if (data.features && data.features.length > 0) {
+                        const coordinates = data.features[0].geometry.coordinates;
+
+                        if (longlat === 0) {
+                            console.log("Longitude:", coordinates[0]);
+                            return coordinates[0];
+                        } else if (longlat === 1) {
+                            console.log("Latitude:", coordinates[1]);
+                            return coordinates[1];
+                        } else {
+                            console.error("Le paramètre longlat doit être 0 pour la longitude ou 1 pour la latitude.");
+                            return null;
+                        }
+                    } else {
+                        console.error("Aucune donnée de coordonnées trouvée.");
+                        return null;
+                    }
+                } catch (error) {
+                    console.error("Erreur lors de la récupération des coordonnées:", error);
+                    return null;
+                }
+              }
+
+
+              // Ajouter des écouteurs d'événements pour détecter les changements dans les select
+              selectVille1.addEventListener("change", updateSelectedValues);
+              selectVille2.addEventListener("change", updateSelectedValues);
+
+            
+              // Mettre à jour les valeurs initiales au chargement de la page
+              updateSelectedValues();
+            </script>
+            
+
+            
+            <div class="form-floating mb-3">
+              <select class="form-select" id="floatingSelect" aria-label="Floating label select example">
+                <option selected>Tesla</option>
+                <option value="2">Renaud Zoé</option>
+                <option value="3">Skoda Octavia</option>
+              </select>
+              <label for="floatingSelect">Véhicules</label>
+            </div>
+            <p>Temps de trajet :</p>
+            <div class="alert alert-info d-flex justify-content-around m-2 " role="alert">
+                55 min
+              </div>
+          </div>
+        <div>
+            <div id="map" class="border border-3" style="width: 70em; height: 30em;">
+              <script>
+                  var map = L.map('map').setView([45.777222, 3.087025], 5);
+
+                  // Ajouter une couche de carte (par exemple, OpenStreetMap)
+                  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                      attribution: '© OpenStreetMap contributors'
+                  }).addTo(map);
+
+                  // Ajouter le contrôle Leaflet Routing Machine
+                  var control = L.Routing.control({
+                      waypoints: [
+                      ],
+                      routeWhileDragging: true,
+                      addWaypoints: false
+                  }).addTo(map);
+                  
+                  // Écouter l'événement "routeselected" pour personnaliser la fenêtre de directions
+                  map.on('routeselected', function (e) {
+                      var route = e.route;
+                      // Ajoutez votre propre logique ici pour personnaliser la fenêtre de directions
+                      console.log("route");
+                  });
+
+                  // Écouter l'événement "routeselected" pour personnaliser la fermeture de la fenêtre de directions
+                  map.on('routingerror', function (e) {
+                      control.setWaypoints([]);
+                  });
+
+                  // Ajouter un événement pour fermer la fenêtre de directions
+                  map.on('dblclick', function (e) {
+                      control.hide();
+                  });
+
+              </script>
+            </div>
+          </div>  
+    </div>
+</body>
+</html>
