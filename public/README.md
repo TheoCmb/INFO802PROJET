@@ -1,11 +1,6 @@
-# TP_INFO802
- 
-Idées :
+# TP_INFO802 COMBE Théo
 
 API REST pour selection villes
 API REST pour affichage carte
-API au choix pour bornes recharges
-API GraphQL pour selection véhicules
-SOAP pour calcul temps de trajet
-
-https://geo.api.gouv.fr/communes
+SOAP non implémenté pour calcul temps de trajet
+Deployement Cloud sur Firebase : https://info802-projet.web.app/

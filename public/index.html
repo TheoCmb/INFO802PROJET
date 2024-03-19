@@ -30,21 +30,16 @@
           fetch("https://geo.api.gouv.fr/communes")
               .then(response => response.json())
               .then(data => {
-                  // Extraire les noms du JSON
-
                   const filtre = data.filter(commune => commune.population > 1500);
                   const noms = filtre.map(commune => commune.nom).sort();
                   console.log(noms);
 
-                  // Sélectionner l'élément <select>
                   const selectElement = document.getElementById(id);
 
-                  // Ajouter une option vide par défaut
                   const defaultOption = document.createElement("option");
                   defaultOption.text = "";
                   selectElement.add(defaultOption);
 
-                  // Ajouter chaque nom en tant qu'option dans le sélecteur
                   noms.forEach(nom => {
                       const option = document.createElement("option");
                       option.value = nom;
@@ -63,14 +58,6 @@
 
     <div class="d-flex justify-content-around mt-2">
         <div class="mt-2">
-            <!-- <div class="form-floating mb-3">
-                <input type="text" class="form-control" id="floatingInput" placeholder="Départ">
-                <label for="floatingInput">Départ</label>
-            </div>
-            <div class="form-floating mb-3">
-                <input type="text" class="form-control" id="floatingInput" placeholder="Arrivée">
-                <label for="floatingInput">Arrivée</label>
-            </div>                -->
             <div class="form-floating mb-3">
               <select class="form-select" id="floatingSelectVille1" aria-label="Floating label select example">
               </select>
@@ -92,10 +79,8 @@
                 return selectElement.value;
               }
 
-              // Variable pour stocker l'itinéraire actuel
               var itineraireActuel = null;
 
-              // Fonction pour définir les points de départ et d'arrivée et calculer l'itinéraire
               function setItineraire(map, latitudeDepart, longitudeDepart, latitudeArrivee, longitudeArrivee) {
                   itineraireActuel = L.Routing.control({
                       waypoints: [
@@ -172,11 +157,8 @@
                 }
               }
 
-
-              // Ajouter des écouteurs d'événements pour détecter les changements dans les select
               selectVille1.addEventListener("change", updateSelectedValues);
               selectVille2.addEventListener("change", updateSelectedValues);
-
             
               // Mettre à jour les valeurs initiales au chargement de la page
               updateSelectedValues();
@@ -202,7 +184,6 @@
               <script>
                   var map = L.map('map').setView([45.777222, 3.087025], 5);
 
-                  // Ajouter une couche de carte (par exemple, OpenStreetMap)
                   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                       attribution: '© OpenStreetMap contributors'
                   }).addTo(map);
@@ -215,19 +196,15 @@
                       addWaypoints: false
                   }).addTo(map);
                   
-                  // Écouter l'événement "routeselected" pour personnaliser la fenêtre de directions
                   map.on('routeselected', function (e) {
                       var route = e.route;
-                      // Ajoutez votre propre logique ici pour personnaliser la fenêtre de directions
                       console.log("route");
                   });
 
-                  // Écouter l'événement "routeselected" pour personnaliser la fermeture de la fenêtre de directions
                   map.on('routingerror', function (e) {
                       control.setWaypoints([]);
                   });
 
-                  // Ajouter un événement pour fermer la fenêtre de directions
                   map.on('dblclick', function (e) {
                       control.hide();
                   });
